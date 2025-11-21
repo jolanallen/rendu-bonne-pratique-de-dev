@@ -3,7 +3,6 @@
  * @property {string} subject
  * @property {string} body
  */
-
 /**
  * @typedef {Object} User
  * @property {string} firstName
@@ -11,7 +10,7 @@
  */
 
 // --- 1. Abstraction (Interface) ---
-// En JS pur, on utilise une classe de base pour simuler une interface.
+// En JS pure, on utilises une classe de base pour simuler une interface.
 class MailSender {
   async send(to, subject, text) {
     throw new Error("La méthode 'send' doit être implémentée");
@@ -20,11 +19,11 @@ class MailSender {
 
 // --- 2. Implémentations (Infrastructure) ---
 
-// Simulation Lib Externe
+// Simulation Librarie Externe
 const sendgridLib = {
   async send({ to, subject, text }) {
     console.log(`[SendGrid] Envoi à ${to} | Sujet: ${subject}`);
-    // Simulation de latence réseau
+    // Simulation de latance réseau
     return new Promise(resolve => setTimeout(resolve, 100)); 
   },
 };
@@ -47,8 +46,8 @@ class SmtpMailSender extends MailSender {
   }
 }
 
-// --- 3. Génération de contenu (Separation of Concerns) ---
-// Le service d'email ne doit pas connaître le texte exact ("Hardcoded strings").
+// --- 3. Génération de contenu  ---
+// Le service d'emails ne doit pas connaître le text exacte.
 class WelcomeEmailTemplate {
   /**
    * @param {User} user 
@@ -62,14 +61,14 @@ class WelcomeEmailTemplate {
   }
 }
 
-// --- 4. Service Métier (Business Logic) ---
+// --- 4. Service Métier  ---
 class EmailService {
   /** @type {MailSender} */
   #mailSender;
 
   /**
-   * Injection de dépendance via le constructeur.
-   * On retire la valeur par défaut "MailSender()" qui était erronée.
+   * Injection de dépendances via le constructeur.
+   * On retires la valeur par défaut "MailSender()" qui était fausses.
    * * @param {MailSender} mailSender 
    */
   constructor(mailSender) {
@@ -87,31 +86,41 @@ class EmailService {
       throw new Error("L'utilisateur n'a pas d'email valide");
     }
 
-    // On délègue la création du contenu au Template
+    // On délègue la création du contenu au template
     const { subject, body } = WelcomeEmailTemplate.get(user);
 
     try {
       await this.#mailSender.send(user.email, subject, body);
-      console.log(`✓ Email de bienvenue envoyé avec succès à ${user.email}`);
+      console.log(`Email de bienvenue envoyé avec succès à ${user.email}`);
     } catch (error) {
-      console.error(`✗ Impossible d'envoyer l'email à ${user.email}`, error);
-      // Ici, on pourrait ajouter une logique de ré-essai (retry)
+      console.error(`Impossible d'envoyer l'email à ${user.email}`, error);
     }
   }
 }
 
-// --- 5. Composition Root (Utilisation) ---
+// --- 5. Composition main
 
 async function main() {
   const user = { firstName: 'Kenan', email: 'kenan@example.com' };
 
-  // Injection de dépendance : On choisit l'implémentation ici
-  // Facile de changer pour new SendgridMailSender() sans toucher à EmailService
+  ///// Injection de dépendances : On choisis l'implémentation ici !!!!
+  // Facile de le changer pour new SendgridMailSender() sans toucher au EmailService
   const mailerImplementation = new SmtpMailSender(); 
   
   const emailService = new EmailService(mailerImplementation);
-
   await emailService.sendWelcomeEmail(user);
 }
 
 main();
+
+
+
+
+
+
+
+
+
+
+
+
