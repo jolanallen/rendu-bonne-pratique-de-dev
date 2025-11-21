@@ -6,26 +6,71 @@ const sendgrid = {
   },
 };
 
-// Service MÉTIER (version mauvaise : couplage fort)
+class MailProvider {
+  async sendMail(mail) {
+    throw new Error('sendMail() doit être implémenté');
+  }
+}
+
+class SendGridMailProvider extends MailProvider {
+  constructor(sendgridClient) {
+    super();
+    this.sendgridClient = sendgridClient;
+  }
+
+  async sendMail({ to, subject, text }) {
+    await this.sendgridClient.send({ to, subject, text });
+  }
+}
+
+class FakeMailProvider extends MailProvider {
+  constructor() {
+    super();
+    this.sentMails = [];
+  }
+
+  async sendMail({ to, subject, text }) {
+    this.sentMails.push({ to, subject, text, date: new Date() });
+    console.log('[fake] Email enregistré (non envoyé) pour', to);
+  }
+
+  getSentMails() {
+    return this.sentMails;
+  }
+}
+
 class EmailService {
+  constructor(mailProvider) {
+    this.mailProvider = mailProvider;
+  }
+
   async sendWelcomeEmail(user) {
-    const subject = 'Bienvenue sur notre plateforme';
-    const text = `Bonjour ${user.firstName},
+    await this.mailProvider.sendMail({
+      to: user.email,
+      subject: 'Bienvenue sur notre plateforme',
+      text: `Bonjour ${user.firstName},
 
 Merci pour votre inscription.
 
-À bientôt !`;
-
-    // Couplage direct au "détail" sendgrid
-    await sendgrid.send({
-      to: user.email,
-      subject,
-      text,
+À bientôt !`,
     });
   }
 }
 
-// Petit exemple d’utilisation
 const user = { firstName: 'Kenan', email: 'kenan@example.com' };
-const emailService = new EmailService();
-emailService.sendWelcomeEmail(user);
+
+const prodMailProvider = new SendGridMailProvider(sendgrid);
+const emailServiceProd = new EmailService(prodMailProvider);
+emailServiceProd.sendWelcomeEmail(user);
+
+const fakeMailProvider = new FakeMailProvider();
+const emailServiceTest = new EmailService(fakeMailProvider);
+
+(async () => {
+  await emailServiceTest.sendWelcomeEmail({
+    firstName: 'Alice',
+    email: 'alice@test.com',
+  });
+
+  console.log('Mails envoyés en test :', fakeMailProvider.getSentMails());
+})();

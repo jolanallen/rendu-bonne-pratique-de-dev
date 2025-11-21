@@ -7,29 +7,38 @@ function formatPrice(value) {
   return value.toFixed(2).replace('.', ',') + ' €';
 }
 
-// Version non OCP : if / else partout
-function calculateShippingCost(type, orderAmount) {
-  if (type === 'standard') {
+const shippingStrategies = {
+  standard: (orderAmount) => {
     if (orderAmount >= 50) {
       return 0;
     } else {
       return 4.99;
     }
-  } else if (type === 'express') {
+  },
+  express: (orderAmount) => {
     if (orderAmount >= 100) {
       return 0;
     } else {
       return 9.99;
     }
-  } else if (type === 'pickup') {
+  },
+  pickup: (orderAmount) => {
     if (orderAmount >= 30) {
       return 0;
     } else {
       return 2.99;
     }
-  } else {
+  },
+};
+
+function calculateShippingCost(type, orderAmount) {
+  const strategy = shippingStrategies[type];
+
+  if (!strategy) {
     return 0;
   }
+
+  return strategy(orderAmount);
 }
 
 calcButton.addEventListener('click', () => {
@@ -40,3 +49,14 @@ calcButton.addEventListener('click', () => {
   resultEl.textContent =
     'Frais de livraison : ' + formatPrice(shippingCost);
 });
+
+
+
+
+
+
+
+
+
+
+

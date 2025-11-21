@@ -9,21 +9,17 @@
  * @property {string} email
  */
 
-// --- 1. Abstraction (Interface) ---
-// En JS pure, on utilises une classe de base pour simuler une interface.
+
 class MailSender {
   async send(to, subject, text) {
     throw new Error("La méthode 'send' doit être implémentée");
   }
 }
 
-// --- 2. Implémentations (Infrastructure) ---
 
-// Simulation Librarie Externe
 const sendgridLib = {
   async send({ to, subject, text }) {
     console.log(`[SendGrid] Envoi à ${to} | Sujet: ${subject}`);
-    // Simulation de latance réseau
     return new Promise(resolve => setTimeout(resolve, 100)); 
   },
 };
@@ -46,8 +42,6 @@ class SmtpMailSender extends MailSender {
   }
 }
 
-// --- 3. Génération de contenu  ---
-// Le service d'emails ne doit pas connaître le text exacte.
 class WelcomeEmailTemplate {
   /**
    * @param {User} user 
@@ -61,15 +55,12 @@ class WelcomeEmailTemplate {
   }
 }
 
-// --- 4. Service Métier  ---
 class EmailService {
   /** @type {MailSender} */
   #mailSender;
 
   /**
-   * Injection de dépendances via le constructeur.
-   * On retires la valeur par défaut "MailSender()" qui était fausses.
-   * * @param {MailSender} mailSender 
+  *  @param {MailSender} mailSender 
    */
   constructor(mailSender) {
     if (!mailSender) {
@@ -79,14 +70,13 @@ class EmailService {
   }
 
   /**
-   * @param {User} user 
+    * @param {User} user 
    */
   async sendWelcomeEmail(user) {
     if (!user.email) {
       throw new Error("L'utilisateur n'a pas d'email valide");
     }
 
-    // On délègue la création du contenu au template
     const { subject, body } = WelcomeEmailTemplate.get(user);
 
     try {
@@ -98,13 +88,11 @@ class EmailService {
   }
 }
 
-// --- 5. Composition main
 
 async function main() {
   const user = { firstName: 'Kenan', email: 'kenan@example.com' };
 
-  ///// Injection de dépendances : On choisis l'implémentation ici !!!!
-  // Facile de le changer pour new SendgridMailSender() sans toucher au EmailService
+ 
   const mailerImplementation = new SmtpMailSender(); 
   
   const emailService = new EmailService(mailerImplementation);
